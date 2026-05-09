@@ -63,22 +63,38 @@ const light = {
   creamDark:  '#F0EAD8',
 };
 const dark = {
-  bg:        '#141C18',
-  surface:   '#1E2B24',
-  border:    '#2A3D33',
-  text:      '#F5F1E8',
-  muted:     '#9CB8A8',
-  amber:     '#F3B85B',
-  cream:     '#1E2B24',
-  creamDark: '#253329',
-  // card text used when the card bg is the dark surface
-  cardText:  '#F5F1E8',
-  cardMuted: '#C7D8CC',
+  bg:        '#0F1115',
+  surface:   '#151922',
+  border:    '#2D3645',
+  text:      '#F5F7FA',
+  muted:     '#8A94A6',
+  amber:     '#E6B566',
+  cream:     '#1B212C',
+  creamDark: '#232A36',
+  cardText:  '#F5F7FA',
+  cardMuted: '#C2CAD6',
+  // sidebar / left panel
+  sidebarBg: '#12161D',
+  inputBg:   '#161B24',
+  hover:     '#262F3D',
+  active:    '#313C4D',
+  softBorder:'#252D3A',
 };
 
 /* ── helpers ── */
 function tok(isDark: boolean) {
-  if (!isDark) return { ...light, cardText: light.text, cardMuted: light.muted };
+  if (!isDark) {
+    return {
+      ...light,
+      cardText:   light.text,
+      cardMuted:  light.muted,
+      sidebarBg:  light.surface,
+      inputBg:    light.cream,
+      hover:      '#EBF3EE',
+      active:     '#DDE8E2',
+      softBorder: light.border,
+    };
+  }
   return { ...light, ...dark };
 }
 
@@ -218,8 +234,8 @@ function SearchPage({ onNavigate, isDark, setDark }: {
               {/* input */}
               <div className="rounded-xl border-2 flex items-center transition-all duration-200"
                 style={{
-                  background:  t.cream,
-                  borderColor: shake ? '#D95A5A' : t.border,
+                  background:  t.inputBg,
+                  borderColor: shake ? '#D95A5A' : t.softBorder,
                   animation:   shake ? 'shake 0.45s ease-in-out' : undefined,
                 }}
                 onFocus={() => {}}
@@ -230,7 +246,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
                 onBlurCapture={e => {
                   const wrap = e.currentTarget as HTMLDivElement;
                   if (!wrap.contains(document.activeElement))
-                    wrap.style.borderColor = shake ? '#D95A5A' : t.border;
+                    wrap.style.borderColor = shake ? '#D95A5A' : t.softBorder;
                 }}
               >
                 <Search className="ml-3 shrink-0" size={16} style={{ color: t.muted }} />
@@ -262,7 +278,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
                     onClick={() => { setQuery(d); doSearch(d); }}
                     className="px-3 py-1 rounded-full text-xs font-medium border transition-all duration-150"
                     style={{ borderColor: t.primary, color: t.primary, background: 'transparent' }}
-                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = isDark ? 'rgba(92,131,116,0.2)' : '#EBF3EE'; }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = t.hover; }}
                     onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}>
                     {d}
                   </button>
@@ -272,7 +288,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
 
             {/* forums card */}
             <div className="rounded-2xl border p-6"
-              style={{ background: t.surface, borderColor: t.border, boxShadow: '0 2px 10px rgba(44,58,51,0.06)' }}>
+              style={{ background: isDark ? t.sidebarBg : t.surface, borderColor: t.border, boxShadow: isDark ? '0 2px 10px rgba(0,0,0,0.25)' : '0 2px 10px rgba(44,58,51,0.06)' }}>
               <h2 className="text-xs font-semibold uppercase tracking-widest mb-4" style={{ color: t.muted }}>
                 Patient Communities
               </h2>
@@ -284,12 +300,12 @@ function SearchPage({ onNavigate, isDark, setDark }: {
                       className="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all duration-150"
                       style={{
                         borderColor: checked ? t.primary : t.border,
-                        background:  checked ? (isDark ? 'rgba(92,131,116,0.14)' : '#EEF5F1') : 'transparent',
+                        background:  checked ? (isDark ? t.active : '#EEF5F1') : 'transparent',
                       }}>
                       <div className="w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors"
                         style={{
                           background:  checked ? t.primary : 'transparent',
-                          borderColor: checked ? t.primary : (isDark ? '#4A6358' : '#AABFB5'),
+                          borderColor: checked ? t.primary : (isDark ? '#3A4557' : '#AABFB5'),
                         }}>
                         {checked && <Check size={11} color="white" strokeWidth={3} />}
                         <input type="checkbox" checked={checked} onChange={() => toggleSite(site.domain)} className="sr-only" />
@@ -317,7 +333,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
             {!loading && !results && !error && (
               <div className="flex flex-col items-center justify-center py-28 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
-                  style={{ background: isDark ? 'rgba(92,131,116,0.14)' : '#EEF5F1' }}>
+                  style={{ background: isDark ? t.cream : '#EEF5F1' }}>
                   <Heart size={28} style={{ color: t.primary }} />
                 </div>
                 <h3 className="text-lg font-semibold mb-2" style={{ color: t.text }}>Hear from real patients</h3>
@@ -338,11 +354,11 @@ function SearchPage({ onNavigate, isDark, setDark }: {
             {/* error */}
             {!loading && error && sites.length > 0 && (
               <div className="rounded-2xl border p-6 flex items-start gap-4"
-                style={{ background: isDark ? '#2A1E1E' : '#FDF0EE', borderColor: '#E8A090' }}>
-                <AlertTriangle size={20} style={{ color: '#C05050', flexShrink: 0, marginTop: 2 }} />
+                style={{ background: isDark ? '#1E1620' : '#FDF0EE', borderColor: isDark ? '#4A2A3A' : '#E8A090' }}>
+                <AlertTriangle size={20} style={{ color: isDark ? '#F08090' : '#C05050', flexShrink: 0, marginTop: 2 }} />
                 <div>
-                  <p className="font-semibold mb-0.5" style={{ color: isDark ? '#F0A0A0' : '#A03030' }}>No results found</p>
-                  <p className="text-sm" style={{ color: isDark ? '#D08080' : '#C05050' }}>{error}</p>
+                  <p className="font-semibold mb-0.5" style={{ color: isDark ? '#F5C0C8' : '#A03030' }}>No results found</p>
+                  <p className="text-sm" style={{ color: isDark ? '#C89098' : '#C05050' }}>{error}</p>
                 </div>
               </div>
             )}
@@ -413,7 +429,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
                         return (
                           <a key={idx} href={href} target="_blank" rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
-                            style={{ background: t.creamDark, color: t.text, borderColor: t.border }}
+                            style={{ background: isDark ? t.hover : t.creamDark, color: t.text, borderColor: t.border }}
                             onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = t.primary; }}
                             onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = t.border; }}>
                             {hostname}<ExternalLink size={11} />
@@ -448,7 +464,8 @@ function SearchPage({ onNavigate, isDark, setDark }: {
           60%       { transform: translateX(-4px); }
           80%       { transform: translateX(4px); }
         }
-        ::placeholder { color: #7B8F84 !important; }
+        ::placeholder { color: #7B8F84; }
+        .dark ::placeholder { color: #6E7887; }
       `}</style>
     </div>
   );
@@ -522,11 +539,11 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
 
         {error && (
           <div className="rounded-2xl border p-6 flex items-start gap-4"
-            style={{ background: isDark ? '#2A1E1E' : '#FDF0EE', borderColor: '#E8A090' }}>
-            <AlertTriangle size={20} style={{ color: '#C05050', flexShrink: 0, marginTop: 2 }} />
+            style={{ background: isDark ? '#1E1620' : '#FDF0EE', borderColor: isDark ? '#4A2A3A' : '#E8A090' }}>
+            <AlertTriangle size={20} style={{ color: isDark ? '#F08090' : '#C05050', flexShrink: 0, marginTop: 2 }} />
             <div>
-              <p className="font-semibold mb-0.5" style={{ color: isDark ? '#F0A0A0' : '#A03030' }}>Error</p>
-              <p className="text-sm" style={{ color: isDark ? '#D08080' : '#C05050' }}>{error}</p>
+              <p className="font-semibold mb-0.5" style={{ color: isDark ? '#F5C0C8' : '#A03030' }}>Error</p>
+              <p className="text-sm" style={{ color: isDark ? '#C89098' : '#C05050' }}>{error}</p>
             </div>
           </div>
         )}
@@ -534,7 +551,7 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
         {!loading && !error && searches.length === 0 && (
           <div className="rounded-2xl border p-12 text-center"
             style={{ background: t.surface, borderColor: t.border }}>
-            <Bookmark size={32} className="mx-auto mb-3" style={{ color: t.border }} />
+            <Bookmark size={32} className="mx-auto mb-3" style={{ color: t.muted }} />
             <p className="font-semibold mb-3" style={{ color: t.muted }}>No saved searches yet</p>
             <button onClick={() => onNavigate('search')}
               className="text-sm font-medium transition-opacity hover:opacity-70"
@@ -554,10 +571,10 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; (e.currentTarget as HTMLButtonElement).style.borderColor = t.border; (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: isDark ? 'rgba(92,131,116,0.14)' : '#EEF5F1' }}>
+                    style={{ background: isDark ? t.hover : '#EEF5F1' }}>
                     <Heart size={16} style={{ color: t.primary }} />
                   </div>
-                  <ExternalLink size={14} style={{ color: t.border, marginTop: 4 }} />
+                  <ExternalLink size={14} style={{ color: t.muted, marginTop: 4 }} />
                 </div>
                 <h3 className="font-semibold capitalize mb-1" style={{ color: t.text }}>{s.disease}</h3>
                 <p className="text-xs" style={{ color: t.muted }}>
