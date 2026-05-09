@@ -33,10 +33,15 @@ interface PatientResult {
 }
 
 interface SavedSearch {
-  id?:      string;
-  disease:  string;
-  result:   PatientResult;
-  savedAt?: string;
+  id?:             string;
+  created_at?:     string;
+  disease_name?:   string;
+  result_data?:    PatientResult;
+  user_identifier?: string;
+  // legacy fields (fallback)
+  disease?:  string;
+  result?:   PatientResult;
+  savedAt?:  string;
 }
 
 const CARDS = [
@@ -490,7 +495,7 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
         const res = await fetch(LIST_WEBHOOK_URL);
         if (!res.ok) throw new Error();
         const data = await res.json();
-        setSearches(Array.isArray(data) ? data : [data]);
+        setSearches(Array.isArray(data) ? data : (data.searches || []));
       } catch {
         setError('Failed to load saved searches.');
       } finally {
@@ -563,27 +568,33 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
 
         {!loading && !error && searches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {searches.map((s, idx) => (
-              <button key={idx} onClick={() => onNavigate('search')}
-                className="p-5 rounded-2xl border text-left group transition-all duration-150 hover:shadow-md"
-                style={{ background: t.surface, borderLeft: `4px solid ${t.primary}`, borderColor: t.border }}
-                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.primary; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; (e.currentTarget as HTMLButtonElement).style.borderColor = t.border; (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; }}>
-                <div className="flex items-start justify-between mb-3">
-                  <div className="w-9 h-9 rounded-xl flex items-center justify-center"
-                    style={{ background: isDark ? t.hover : '#EEF5F1' }}>
-                    <Heart size={16} style={{ color: t.primary }} />
+            {searches.map((s, idx) => {
+              const title   = s.result_data?.name   || s.disease_name || s.disease || 'Saved Search';
+              const summary = s.result_data?.summary || s.result?.summary || 'No summary available';
+              const date    = s.created_at || s.savedAt;
+              return (
+                <button key={s.id ?? idx} onClick={() => onNavigate('search')}
+                  className="p-5 rounded-2xl border text-left group transition-all duration-150 hover:shadow-md"
+                  style={{ background: t.surface, borderLeft: `4px solid ${t.primary}`, borderColor: t.border }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.primary; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.border; (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; }}>
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center"
+                      style={{ background: isDark ? t.hover : '#EEF5F1' }}>
+                      <Heart size={16} style={{ color: t.primary }} />
+                    </div>
+                    <ExternalLink size={14} style={{ color: t.muted, marginTop: 4 }} />
                   </div>
-                  <ExternalLink size={14} style={{ color: t.muted, marginTop: 4 }} />
-                </div>
-                <h3 className="font-semibold capitalize mb-1" style={{ color: t.text }}>{s.disease}</h3>
-                <p className="text-xs" style={{ color: t.muted }}>
-                  {s.savedAt
-                    ? new Date(s.savedAt).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-                    : 'Saved'}
-                </p>
-              </button>
-            ))}
+                  <h3 className="font-semibold capitalize mb-1 leading-snug" style={{ color: t.text }}>{title}</h3>
+                  <p className="text-xs mb-2 line-clamp-2 leading-relaxed" style={{ color: t.muted }}>{summary}</p>
+                  <p className="text-xs font-medium" style={{ color: isDark ? t.muted : t.primary }}>
+                    {date
+                      ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+                      : 'Saved'}
+                  </p>
+                </button>
+              );
+            })}
           </div>
         )}
       </main>
