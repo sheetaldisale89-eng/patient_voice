@@ -86,6 +86,10 @@ const dark = {
   softBorder:'#252D3A',
 };
 
+interface NavState {
+  resultData?: PatientResult;
+}
+
 /* ── helpers ── */
 function tok(isDark: boolean) {
   if (!isDark) {
@@ -127,7 +131,7 @@ function Toast({ show }: { show: boolean }) {
    SEARCH PAGE
 ══════════════════════════════════════════════════════════════════════════ */
 function SearchPage({ onNavigate, isDark, setDark }: {
-  onNavigate: (p: string) => void;
+  onNavigate: (p: string, state?: NavState) => void;
   isDark: boolean;
   setDark: (v: boolean) => void;
 }) {
@@ -480,7 +484,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
    SAVED SEARCHES PAGE
 ══════════════════════════════════════════════════════════════════════════ */
 function SavedSearchesPage({ onNavigate, isDark, setDark }: {
-  onNavigate: (p: string) => void;
+  onNavigate: (p: string, state?: NavState) => void;
   isDark: boolean;
   setDark: (v: boolean) => void;
 }) {
@@ -572,18 +576,25 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
               const title   = s.result_data?.name   || s.disease_name || s.disease || 'Saved Search';
               const summary = s.result_data?.summary || s.result?.summary || 'No summary available';
               const date    = s.created_at || s.savedAt;
+              const resultData = s.result_data || s.result;
               return (
-                <button key={s.id ?? idx} onClick={() => onNavigate('search')}
-                  className="p-5 rounded-2xl border text-left group transition-all duration-150 hover:shadow-md"
+                <button key={s.id ?? idx}
+                  onClick={() => {
+                    if (resultData) {
+                      onNavigate('saved-result', { resultData });
+                    }
+                  }}
+                  disabled={!resultData}
+                  className="p-5 rounded-2xl border text-left group transition-all duration-150 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: t.surface, borderLeft: `4px solid ${t.primary}`, borderColor: t.border }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.primary; }}
+                  onMouseEnter={e => { if (resultData) (e.currentTarget as HTMLButtonElement).style.borderColor = t.primary; }}
                   onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = t.border; (e.currentTarget as HTMLButtonElement).style.borderLeft = `4px solid ${t.primary}`; }}>
                   <div className="flex items-start justify-between mb-3">
                     <div className="w-9 h-9 rounded-xl flex items-center justify-center"
                       style={{ background: isDark ? t.hover : '#EEF5F1' }}>
                       <Heart size={16} style={{ color: t.primary }} />
                     </div>
-                    <ExternalLink size={14} style={{ color: t.muted, marginTop: 4 }} />
+                    <ChevronLeft size={14} style={{ color: t.muted, marginTop: 4, transform: 'rotate(180deg)' }} />
                   </div>
                   <h3 className="font-semibold capitalize mb-1 leading-snug" style={{ color: t.text }}>{title}</h3>
                   <p className="text-xs mb-2 line-clamp-2 leading-relaxed" style={{ color: t.muted }}>{summary}</p>
@@ -615,18 +626,163 @@ function SavedSearchesPage({ onNavigate, isDark, setDark }: {
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
+   SAVED RESULT DETAIL PAGE
+══════════════════════════════════════════════════════════════════════════ */
+function SavedResultPage({ onNavigate, isDark, setDark, resultData }: {
+  onNavigate: (p: string, state?: NavState) => void;
+  isDark: boolean;
+  setDark: (v: boolean) => void;
+  resultData: PatientResult | null;
+}) {
+  const t = tok(isDark);
+
+  return (
+    <div className="min-h-screen flex flex-col transition-colors duration-300"
+      style={{ background: t.bg, color: t.text, fontFamily: "'Inter', sans-serif" }}>
+
+      <header className="sticky top-0 z-20 border-b"
+        style={{ background: t.surface, borderColor: t.border, boxShadow: '0 1px 6px rgba(44,58,51,0.07)' }}>
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-8 py-3.5 flex items-center justify-between">
+          <button onClick={() => onNavigate('saved')}
+            className="flex items-center gap-1.5 text-sm font-medium transition-opacity hover:opacity-70"
+            style={{ color: t.primary }}>
+            <ChevronLeft size={16} /> My Searches
+          </button>
+          <div className="flex items-center gap-2.5 absolute left-1/2 -translate-x-1/2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+              style={{ background: t.primary }}>
+              <HeartbeatIcon />
+            </div>
+            <span className="text-lg font-bold tracking-tight" style={{ color: t.text }}>Patient Voice</span>
+          </div>
+          <button onClick={() => setDark(!isDark)} aria-label="Toggle dark mode"
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ background: t.creamDark, color: t.muted }}>
+            {isDark ? <Sun size={15} /> : <Moon size={15} />}
+          </button>
+        </div>
+      </header>
+
+      <main className="flex-1 max-w-screen-xl mx-auto w-full px-4 sm:px-8 py-10">
+        {!resultData ? (
+          <div className="rounded-2xl border p-12 text-center"
+            style={{ background: t.surface, borderColor: t.border }}>
+            <AlertTriangle size={32} className="mx-auto mb-3" style={{ color: t.muted }} />
+            <p className="font-semibold mb-3" style={{ color: t.text }}>Saved result not found</p>
+            <button onClick={() => onNavigate('saved')}
+              className="text-sm font-medium transition-opacity hover:opacity-70"
+              style={{ color: t.primary }}>
+              ← Back to My Searches
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* disclaimer */}
+            <div className="rounded-xl border px-4 py-3 flex items-start gap-2.5 mb-6"
+              style={{ background: '#FBF3E0', borderColor: light.amber }}>
+              <span className="text-base shrink-0">💬</span>
+              <p className="text-xs leading-relaxed" style={{ color: '#7A5818' }}>
+                <strong>These are real patient experiences from forums.</strong> Always consult a healthcare professional for medical decisions.
+              </p>
+            </div>
+
+            <h2 className="text-3xl font-bold capitalize tracking-tight mb-6" style={{ color: t.text }}>
+              {resultData.name}
+            </h2>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+              {CARDS.map(({ key, label, Icon, accent }) => {
+                const val = resultData[key as keyof PatientResult] as string | undefined;
+                return (
+                  <div key={key}
+                    className="rounded-xl p-5 hover:shadow-md transition-shadow duration-200"
+                    style={{
+                      background: t.cream,
+                      border:     `1px solid ${t.border}`,
+                      borderLeft: `4px solid ${accent}`,
+                      boxShadow:  '0 2px 6px rgba(44,58,51,0.05)',
+                    }}>
+                    <div className="flex items-center gap-2.5 mb-3">
+                      <Icon size={17} style={{ color: t.amber, flexShrink: 0 }} />
+                      <h3 className="font-bold text-sm leading-tight" style={{ color: t.cardText }}>{label}</h3>
+                    </div>
+                    <p className="text-sm leading-relaxed" style={{ color: t.cardMuted, lineHeight: '1.7' }}>
+                      {val || 'Not enough patient discussion yet.'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {resultData.sources && (
+              <div className="rounded-2xl border p-5"
+                style={{ background: t.surface, borderColor: t.border }}>
+                <p className="text-xs font-semibold uppercase tracking-widest mb-3" style={{ color: t.muted }}>Sources</p>
+                <div className="flex flex-wrap gap-2">
+                  {resultData.sources.split(',').map(u => u.trim()).filter(Boolean).map((url, idx) => {
+                    let hostname = url;
+                    try { hostname = new URL(url).hostname.replace(/^www\./, ''); } catch { /* raw */ }
+                    const href = url.startsWith('http') ? url : `https://${url}`;
+                    return (
+                      <a key={idx} href={href} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all border"
+                        style={{ background: isDark ? t.hover : t.creamDark, color: t.text, borderColor: t.border }}
+                        onMouseEnter={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = t.primary; }}
+                        onMouseLeave={e => { (e.currentTarget as HTMLAnchorElement).style.borderColor = t.border; }}>
+                        {hostname}<ExternalLink size={11} />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </main>
+
+      <footer className="border-t py-4 text-center mt-auto"
+        style={{ background: t.surface, borderColor: t.border }}>
+        <p className="text-xs" style={{ color: t.muted }}>
+          From real patient communities. <span className="font-medium">Not medical advice.</span>
+        </p>
+      </footer>
+
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+      `}</style>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
    ROOT
 ══════════════════════════════════════════════════════════════════════════ */
 export default function App() {
-  const [page,   setPage]   = useState('search');
-  const [isDark, setIsDark] = useState(false);
+  const [page,    setPage]    = useState('search');
+  const [navState, setNavState] = useState<NavState>({});
+  const [isDark,  setIsDark]  = useState(false);
+
+  const navigate = (p: string, state?: NavState) => {
+    setNavState(state ?? {});
+    setPage(p);
+  };
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', isDark);
     document.body.style.background = isDark ? dark.bg : light.bg;
   }, [isDark]);
 
-  return page === 'search'
-    ? <SearchPage  onNavigate={setPage} isDark={isDark} setDark={setIsDark} />
-    : <SavedSearchesPage onNavigate={setPage} isDark={isDark} setDark={setIsDark} />;
+  if (page === 'saved-result') {
+    return <SavedResultPage
+      onNavigate={navigate}
+      isDark={isDark}
+      setDark={setIsDark}
+      resultData={navState.resultData ?? null}
+    />;
+  }
+  if (page === 'saved') {
+    return <SavedSearchesPage onNavigate={navigate} isDark={isDark} setDark={setIsDark} />;
+  }
+  return <SearchPage onNavigate={navigate} isDark={isDark} setDark={setIsDark} />;
 }
