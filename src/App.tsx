@@ -4,9 +4,9 @@ import {
   Loader2, Check, ExternalLink, Moon, Sun, Bookmark, ChevronLeft,
 } from 'lucide-react';
 
-const API_WEBHOOK_URL  = 'https://veestartsolutions.app.n8n.cloud/webhook/get-disease';
-const SAVE_WEBHOOK_URL = 'https://veestartsolutions.app.n8n.cloud/webhook/save-search';
-const LIST_WEBHOOK_URL = 'https://veestartsolutions.app.n8n.cloud/webhook/list-searches';
+const API_WEBHOOK_URL  = import.meta.env.VITE_API_WEBHOOK_URL as string;
+const SAVE_WEBHOOK_URL = import.meta.env.VITE_SAVE_WEBHOOK_URL as string;
+const LIST_WEBHOOK_URL = import.meta.env.VITE_LIST_WEBHOOK_URL as string;
 
 const SUGGESTED = ['Anxiety', 'Long COVID', 'IBS', 'Chronic Pain', 'ADHD'];
 
