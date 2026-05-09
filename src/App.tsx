@@ -63,16 +63,23 @@ const light = {
   creamDark:  '#F0EAD8',
 };
 const dark = {
-  bg:      '#141C18',
-  surface: '#1E2B24',
-  border:  '#2A3D33',
-  text:    '#D8E8DF',
-  muted:   '#6E9080',
+  bg:        '#141C18',
+  surface:   '#1E2B24',
+  border:    '#2A3D33',
+  text:      '#F5F1E8',
+  muted:     '#9CB8A8',
+  amber:     '#F3B85B',
+  cream:     '#1E2B24',
+  creamDark: '#253329',
+  // card text used when the card bg is the dark surface
+  cardText:  '#F5F1E8',
+  cardMuted: '#C7D8CC',
 };
 
 /* ── helpers ── */
 function tok(isDark: boolean) {
-  return isDark ? { ...light, ...dark } : light;
+  if (!isDark) return { ...light, cardText: light.text, cardMuted: light.muted };
+  return { ...light, ...dark };
 }
 
 function HeartbeatIcon({ color = 'white' }: { color?: string }) {
@@ -383,9 +390,9 @@ function SearchPage({ onNavigate, isDark, setDark }: {
                         }}>
                         <div className="flex items-center gap-2.5 mb-3">
                           <Icon size={17} style={{ color: t.amber, flexShrink: 0 }} />
-                          <h3 className="font-bold text-sm leading-tight" style={{ color: t.text }}>{label}</h3>
+                          <h3 className="font-bold text-sm leading-tight" style={{ color: t.cardText }}>{label}</h3>
                         </div>
-                        <p className="text-sm leading-relaxed" style={{ color: t.muted, lineHeight: '1.7' }}>
+                        <p className="text-sm leading-relaxed" style={{ color: t.cardMuted, lineHeight: '1.7' }}>
                           {val || 'Not enough patient discussion yet.'}
                         </p>
                       </div>
@@ -441,7 +448,7 @@ function SearchPage({ onNavigate, isDark, setDark }: {
           60%       { transform: translateX(-4px); }
           80%       { transform: translateX(4px); }
         }
-        ::placeholder { color: #9AB0A6; }
+        ::placeholder { color: #7B8F84 !important; }
       `}</style>
     </div>
   );
